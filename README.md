@@ -1,9 +1,11 @@
 # lucky-cluster
 
-When you currently boot your lucky app, you're boot 1 single process. If you're running on a beast server, then you're missing out on some free performance!
+When you currently boot your lucky app, you boot 1 single process. If you're running on a beast server, then you're missing out on some free performance!
 This shards lets you boot multiple processes of your lucky app.
 
 ## Installation
+
+*NOTE* This version requires Lucky `0.15.0` or later.
 
 1. Add the dependency to your `shard.yml`:
 ```yaml
@@ -15,63 +17,43 @@ dependencies:
 
 ## Usage
 
-1. Take a look in your `src/app.cr` to see your middleware stack. You'll first want to copy that array, and then you can just delete that whole `App` class.
-2. Open `src/server.cr`
-
-It probably looks something like this:
-
+1. Open `src/start_server.cr`
+2. Add your require below the app require
 ```crystal
-# A bare-bones src/server.cr setup
 require "./app"
-
-if Lucky::Env.development?
-  LuckyRecord::Migrator::Runner.new.ensure_migrated!
-end
-Habitat.raise_if_missing_settings!
-
-app = App.new
-puts "Listening on #{app.base_uri}"
-app.listen
-
-Signal::INT.trap do
-  app.close
-end
-```
-
-Just update it to look more like this:
-
-```crystal
 require "lucky-cluster"
+```
+3. Replace `AppServer.new` with `Lucky::Cluster.new`
+```crystal
+app_server = Lucky::Cluster.new
+```
+4. Remove the `Signal::INT.trap` block. We will handle that for you.
+5. You can remove the extra `puts` in there too, if you want.
+
+6. Optionally, specify the number of processes to boot with `app_server.threads = 2`
+
+Once done, your `src/start_server.cr` file should look like this:
+
+```crystal
 require "./app"
+require "lucky-cluster"
 
 if Lucky::Env.development?
-  LuckyRecord::Migrator::Runner.new.ensure_migrated!
+  Avram::Migrator::Runner.new.ensure_migrated!
 end
 Habitat.raise_if_missing_settings!
 
-app = Lucky::Cluster.new([
-  Lucky::HttpMethodOverrideHandler.new,
-  Lucky::LogHandler.new,
-  Lucky::SessionHandler.new,
-  Lucky::FlashHandler.new,
-  Lucky::ErrorHandler.new(action: Errors::Show),
-  Lucky::RouteHandler.new,
-  Lucky::StaticFileHandler.new("./public", false),
-  Lucky::RouteNotFoundHandler.new
-])
+app_server = Lucky::Cluster.new
 
-# This is optional
-app.threads = ENV.fetch("MAX_THREADS") { "10" }.to_i
+# This boots a new process for each thread.
+app_server.threads = ENV.fetch("MAX_THREADS") { "10" }.to_i
 
-# This is not
-app.listen
+app_server.listen
 ```
 
-Since we don't need the `App` class, we remove that line, and replace it with the new `Lucky::Cluster.new`. This takes your middleware stack which you copied from the other file before deleting that class.
+## Gotchas
 
-Next, you can optionally tell the cluster how many processes to boot by assigning the `threads`. This will always boot a single master, process, but if you want 10 additional processes, then `app.threads = 10`. If you don't call this method, the cluster will assume just 1.
-
-Finally, `app.listen` will boot the server. The cluster handles doing the `Signal::INT.trap` internally so we can catch all the child processes that get booted.
+Linux will handle load balancing the processes for you, macOS will not. So if you try to load test this on a mac, you're going to have a bad time!
 
 ## Development
 

@@ -1,29 +1,19 @@
 module Lucky
 
-  class Cluster
-    VERSION = "0.1.0"
-    private getter server : HTTP::Server
+  class Cluster < ::AppServer
+    VERSION = "0.2.0"
     private getter processes : Array(Concurrent::Future(Nil))
+    private getter reuse_port : Bool
     property threads : Int32 = 1
 
-    def initialize(stack : Array(HTTP::Handler))
-      @server = setup_server(stack)
+    def initialize
       @processes = [] of Concurrent::Future(Nil)
+      @reuse_port = true
+      super
     end
 
-    def base_uri
-      "http://#{host}:#{port}"
-    end
-
-    def host
-      Lucky::Server.settings.host
-    end
-
-    def port
-      Lucky::Server.settings.port
-    end
-
-    def master?
+    # The parent process controlls the children
+    def parent?
       ARGV[0]? != "--child"
     end
 
@@ -32,27 +22,29 @@ module Lucky
       threads < 2
     end
 
-    def listen
+    def listen : Nil
       if single_boot?
+        @reuse_port = false
         listen_once
       else
+        @reuse_port = true
         listen_carefully
       end
     end
 
-    def close
+    def close : Nil
       processes.each(&.get)
       server.close
     end
 
-    private def setup_server(stack)
-      HTTP::Server.new(stack)
+    private def bind_tcp_and_listen
+      server.bind_tcp(host, port, reuse_port: @reuse_port)
+      server.listen
     end
 
     private def listen_once
       log_boot
-      server.bind_tcp(host, port)
-      server.listen
+      bind_tcp_and_listen
 
       Signal::INT.trap do |signal|
         puts "Stopping server"
@@ -61,7 +53,7 @@ module Lucky
     end
 
     private def listen_carefully
-      if master?
+      if parent?
         boot
         Signal::INT.trap do |signal|
           puts " > terminating gracefully"
@@ -70,12 +62,11 @@ module Lucky
         end
       end
 
-      server.bind_tcp(host, port, true)
-      server.listen
+      bind_tcp_and_listen
     end
 
     private def log_boot
-      puts "Listening on #{base_uri}".colorize(:green)
+      puts "Listening on http://#{host}:#{port}"
     end
 
     private def boot
@@ -104,10 +95,7 @@ module Lucky
           end
         end
       end
-
     end
 
   end
-
 end
-
