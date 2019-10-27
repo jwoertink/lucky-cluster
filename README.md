@@ -1,4 +1,4 @@
-# lucky-cluster
+# lucky-cluster [![Build Status](https://travis-ci.com/jwoertink/lucky-cluster.svg?branch=master)](https://travis-ci.com/jwoertink/lucky-cluster)
 
 When you currently boot your lucky app, you boot 1 single process. If you're running on a beast server, then you're missing out on some free performance!
 This shards lets you boot multiple processes of your lucky app.
