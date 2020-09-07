@@ -1,7 +1,9 @@
+require "future"
+
 module Lucky
 
   class Cluster < ::AppServer
-    VERSION = "0.2.0"
+    VERSION = "0.3.0"
     private getter processes : Array(Concurrent::Future(Nil))
     private getter reuse_port : Bool
     property threads : Int32 = 1
