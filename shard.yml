@@ -1,5 +1,5 @@
 name: lucky-cluster
-version: 0.2.0
+version: 0.3.0
 
 authors:
   - Jeremy Woertink <jeremywoertink@gmail.com>
@@ -7,3 +7,7 @@ authors:
 crystal: 0.29.0
 
 license: MIT
+
+dependencies:
+  future:
+    github: crystal-community/future.cr
