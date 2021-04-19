@@ -2,7 +2,7 @@ require "future"
 
 module Lucky
   class Cluster < ::AppServer
-    VERSION = "0.3.0"
+    VERSION = {{ `shards version #{__DIR__}`.chomp.stringify }}
     private getter processes : Array(Future::Compute(Nil))
     private getter reuse_port : Bool
     property threads : Int32 = 1
