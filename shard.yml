@@ -4,10 +4,16 @@ version: 0.3.0
 authors:
   - Jeremy Woertink <jeremywoertink@gmail.com>
 
-crystal: 0.29.0
+crystal: ">= 0.35.1, < 2.0.0"
 
 license: MIT
 
 dependencies:
   future:
     github: crystal-community/future.cr
+    version: ~> 1.0.0
+
+development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba
+    version: ~> 0.14.2
