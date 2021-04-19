@@ -1,6 +1,6 @@
-# lucky-cluster [![Build Status](https://travis-ci.com/jwoertink/lucky-cluster.svg?branch=master)](https://travis-ci.com/jwoertink/lucky-cluster)
+# lucky-cluster
 
-When you currently boot your lucky app, you boot 1 single process. If you're running on a beast server, then you're missing out on some free performance!
+When a lucky app boots, it's only 1 single process. If you're running on a beast server, then you're missing out on some free performance!
 This shards lets you boot multiple processes of your lucky app.
 
 ## Installation
@@ -27,7 +27,7 @@ require "lucky-cluster"
 ```crystal
 app_server = Lucky::Cluster.new
 ```
-4. Remove the `Signal::INT.trap` block. We will handle that for you.
+4. Remove the `Signal::INT.trap` block. `lucky-cluster` handles that for you.
 5. You can remove the extra `puts` in there too, if you want.
 
 6. Optionally, specify the number of processes to boot with `app_server.threads = 2`
@@ -47,6 +47,8 @@ app_server = Lucky::Cluster.new
 
 # This boots a new process for each thread.
 app_server.threads = ENV.fetch("MAX_THREADS") { "10" }.to_i
+# You can also use this:
+# app_server.threads = System.cpu_count
 
 app_server.listen
 ```
