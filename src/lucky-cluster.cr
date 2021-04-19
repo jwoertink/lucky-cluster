@@ -1,7 +1,6 @@
 require "future"
 
 module Lucky
-
   class Cluster < ::AppServer
     VERSION = "0.3.0"
     private getter processes : Array(Future::Compute(Nil))
@@ -48,7 +47,7 @@ module Lucky
       log_boot
       bind_tcp_and_listen
 
-      Signal::INT.trap do |signal|
+      Signal::INT.trap do |_signal|
         puts "Stopping server"
         server.close
       end
@@ -98,6 +97,5 @@ module Lucky
         end
       end
     end
-
   end
 end
