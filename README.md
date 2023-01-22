@@ -48,7 +48,7 @@ app_server = Lucky::Cluster.new
 # This boots a new process for each thread.
 app_server.threads = ENV.fetch("MAX_THREADS") { "10" }.to_i
 # You can also use this:
-# app_server.threads = System.cpu_count
+# app_server.threads = System.cpu_count.to_i32
 
 app_server.listen
 ```
